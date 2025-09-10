@@ -35,6 +35,8 @@ jobs:
         run: geode sdk install-binaries --platform ios
 
       - name: Configure (Xcode for iOS)
+        env:
+          GEODE_SDK: ${{ env.GEODE_SDK }}
         run: |
           cmake -S . -B build-ios -G Xcode \
             -DCMAKE_SYSTEM_NAME=iOS \
