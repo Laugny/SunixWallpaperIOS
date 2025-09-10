@@ -7,16 +7,26 @@ on:
 jobs:
   ios:
     runs-on: macos-13
-    env:
-      # Deine GD-Version – passt zu deinem mod.json
-      GEODE_GD_VERSION: 2.2074
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Geode SDK holen (Quellcode)
       - name: Fetch Geode SDK
         run: git clone --depth=1 https://github.com/geode-sdk/geode.git geode-sdk
 
+      # Geode CLI installieren (empfohlener Weg auf macOS: Homebrew)
+      - name: Install Geode CLI (brew)
+        run: brew install geode-sdk/geode/geode-cli
+
+      # iOS-Loader-Binaries in unser geklontes SDK legen
+      # -> CLI respektiert GEODE_SDK und lädt die passenden Binaries
+      - name: Install iOS binaries into SDK
+        env:
+          GEODE_SDK: ${{ github.workspace }}/geode-sdk
+        run: geode sdk install-binaries --platform ios
+
+      # CMake-Konfiguration für iOS (Xcode-Generator, iPhoneOS, arm64)
       - name: Configure (Xcode for iOS)
         env:
           GEODE_SDK: ${{ github.workspace }}/geode-sdk
@@ -26,10 +36,7 @@ jobs:
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DGEODE_BUILD_FROM_SOURCE=ON \
-            -DGEODE_GD_VERSION=${GEODE_GD_VERSION} \
-            -DGEODE_BUILD_TESTS=OFF
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
       - name: Build
         run: cmake --build build-ios --config RelWithDebInfo
