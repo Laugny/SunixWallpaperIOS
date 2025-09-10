@@ -15,9 +15,6 @@ jobs:
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      - name: Install Geode SDK
-        run: geode sdk install
-
       - name: Add dummy Geode profile
         run: geode profile add "CI Profile" /tmp ios
 
