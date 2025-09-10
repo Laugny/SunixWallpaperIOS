@@ -14,8 +14,11 @@ endif()
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
+add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 setup_geode_mod(laugny.sunix-wallpaper
     SOURCES ${MOD_SOURCES}
     RESOURCES res
 )
+
+
 
