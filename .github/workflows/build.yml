@@ -15,10 +15,8 @@ jobs:
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      - name: Create dummy Geode profile (CI only)
-        run: |
-          mkdir -p $HOME/.config/geode
-          echo '{"profiles":[{"id":"ci","name":"CI Profile","game":"","path":""}]}' > $HOME/.config/geode/config.json
+      - name: Setup Geode profile (non-interactive)
+        run: geode config setup --id ci --name "CI Profile" --game gd-ios --path /tmp
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
