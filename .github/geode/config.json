@@ -1,1 +1,16 @@
-{"current-profile":"Laugny","profiles":[{"name":"Laugny","gd-path":"G:\\SteamLibrary\\steamapps\\common\\Geometry Dash\\GeometryDash.exe","platform":"ios"}],"default-developer":"Laugny","sdk-nightly":true,"sdk-version":null,"index-token":null,"index-url":"https://api.geode-sdk.org"}
+{
+  "current-profile": "ci",
+  "profiles": [
+    {
+      "id": "ci",
+      "name": "CI Profile",
+      "gd-path": "/tmp",
+      "platform": "ios"
+    }
+  ],
+  "default-developer": "ci",
+  "sdk-nightly": true,
+  "sdk-version": null,
+  "index-token": null,
+  "index-url": "https://api.geode-sdk.org"
+}
