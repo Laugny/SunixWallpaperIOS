@@ -15,8 +15,8 @@ jobs:
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      - name: Setup Geode profile (non-interactive)
-        run: geode config setup --id ci --name "CI Profile" --game gd-ios --path /tmp
+      - name: Run Geode config setup
+        run: geode config setup
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
