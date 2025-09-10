@@ -10,17 +10,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true
+          submodules: true   # wichtig: Submodule auschecken
+
+      - name: Verify submodule
+        run: |
+          git submodule status
+          ls -la "$GITHUB_WORKSPACE/vendor/geode"
 
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
+      # <-- HIER: SDK-Pfad bekannt machen
+      - name: Export GEODE_SDK for all next steps
+        run: echo "GEODE_SDK=$GITHUB_WORKSPACE/vendor/geode" >> "$GITHUB_ENV"
+
       - name: Add dummy Geode profile
         run: geode profile add --name "CI Profile" "/tmp" mac
-        
-      - name: Set SDK path
-        run: geode sdk set-path $GITHUB_WORKSPACE/vendor/geode
-  
+
+      # Optional: CLI auch intern auf das Submodule zeigen lassen
+      - name: Set SDK path in Geode CLI (optional)
+        run: geode sdk set-path "$GITHUB_WORKSPACE/vendor/geode"
+
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
 
