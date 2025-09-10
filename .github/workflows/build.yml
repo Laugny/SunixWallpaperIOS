@@ -18,7 +18,10 @@ jobs:
 
       - name: Install Geode SDK
         run: geode sdk install $HOME/geode-sdk
-
+        
+      - name: Set SDK path
+        run: geode sdk set-path $HOME/geode-sdk
+  
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
 
