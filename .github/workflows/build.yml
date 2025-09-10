@@ -1,4 +1,4 @@
-name: build-ios-only
+name: build-ios
 on:
   push:
     branches: [ main ]
@@ -11,38 +11,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Geode SDK holen (Quellcode)
-      - name: Fetch Geode SDK
-        run: git clone --depth=1 https://github.com/geode-sdk/geode.git geode-sdk
+      # Baut dein Mod für iOS und packt die .geode
+      - name: Build Geode mod (iOS)
+        id: build
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          target: iOS          # <— wichtig
+          sdk: latest          # SDK holen
+          cli: latest          # CLI holen
+          build-config: RelWithDebInfo
 
-      # Geode CLI installieren (empfohlener Weg auf macOS: Homebrew)
-      - name: Install Geode CLI (brew)
-        run: brew install geode-sdk/geode/geode-cli
-
-      # iOS-Loader-Binaries in unser geklontes SDK legen
-      # -> CLI respektiert GEODE_SDK und lädt die passenden Binaries
-      - name: Install iOS binaries into SDK
-        env:
-          GEODE_SDK: ${{ github.workspace }}/geode-sdk
-        run: geode sdk install-binaries --platform ios
-
-      # CMake-Konfiguration für iOS (Xcode-Generator, iPhoneOS, arm64)
-      - name: Configure (Xcode for iOS)
-        env:
-          GEODE_SDK: ${{ github.workspace }}/geode-sdk
-        run: |
-          cmake -S . -B build-ios -G Xcode \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-      - name: Build
-        run: cmake --build build-ios --config RelWithDebInfo
-
-      - name: Upload .geode
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: geode-ios
-          path: build-ios/bin/*.geode
+          path: ${{ steps.build.outputs.build-output }}
