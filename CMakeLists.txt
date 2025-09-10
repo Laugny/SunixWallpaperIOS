@@ -1,27 +1,31 @@
 cmake_minimum_required(VERSION 3.21)
-project(st2-wallpaper-geode-main LANGUAGES CXX)
+project(SunixWallpaper LANGUAGES CXX)
 
-# C++17 ist am stabilsten für iOS/Geode
+# C++17 ist der stabile Standard für Geode
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Geode SDK (kommt vom Workflow als env GEODE_SDK)
-if (NOT DEFINED ENV{GEODE_SDK})
-  message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")
+# iOS: nur arm64 (aus den Geode iOS-Docs)
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "iOS" OR IOS)
+    set(CMAKE_OSX_ARCHITECTURES "arm64")
+else()
+    # für Desktop-Builds (optional)
+    set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
 endif()
-add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# Nur die aktuelle Quelle bauen (ohne main_old.cpp)
+# Geode-CMake laden (stellt geode_add_mod bereit)
+if (DEFINED ENV{GEODE_SDK})
+    include("$ENV{GEODE_SDK}/cmake/geode.cmake")
+else()
+    message(FATAL_ERROR "GEODE_SDK ist nicht gesetzt – Geode SDK fehlt im Build-Environment")
+endif()
+
+# Nur deine aktive Quelle einbinden
 set(MOD_SOURCES
-  src/main.cpp
+    src/main.cpp
 )
 
-# Geode-Target anlegen (statt add_library/setup_geode_mod)
-geode_add_mod(st2-wallpaper-geode-main
-  SOURCES ${MOD_SOURCES}
+# Mod-Target anlegen (Makro kommt aus geode.cmake)
+geode_add_mod(SunixWallpaper
+    SOURCES ${MOD_SOURCES}
 )
-
-# MSVC-Runtime dynamisch (falls du später Win baust)
-if (MSVC)
-  set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
-endif()
