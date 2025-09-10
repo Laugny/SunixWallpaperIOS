@@ -40,7 +40,10 @@ jobs:
 
       - name: Export GEODE_SDK
         run: echo "GEODE_SDK=${GITHUB_WORKSPACE}/vendor/geode" >> $GITHUB_ENV
-
+        
+      - name: Clean build dir
+        run: rm -rf build-ios CMakeCache.txt CMakeFiles vendor
+  
       - name: Configure (Xcode for iOS)
         env:
           GEODE_SDK: ${{ env.GEODE_SDK }}
