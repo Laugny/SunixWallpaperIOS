@@ -22,8 +22,9 @@ include("${GEODE_SDK}/cmake/GeodeFile.cmake")
 set(GEODE_TARGET_PLATFORM iOS CACHE STRING "Geode target platform")
 
 # Mod definieren
-setup_geode_mod(
+setup_geode_mod(${PROJECT_NAME}
     SOURCES   ${MOD_SOURCES}
     RESOURCES res
 )
+
 
