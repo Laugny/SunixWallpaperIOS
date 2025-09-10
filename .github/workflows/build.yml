@@ -6,19 +6,19 @@ on:
 
 jobs:
   ios:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Baut dein Mod für iOS und packt die .geode
+      # Offizielle Action baut dein Mod & managed SDK/Binaries
       - name: Build Geode mod (iOS)
         id: build
         uses: geode-sdk/build-geode-mod@main
         with:
-          target: iOS          # <— wichtig
-          sdk: latest          # SDK holen
-          cli: latest          # CLI holen
+          target: iOS            # <- iOS-Target
+          sdk: latest            # SDK holen
+          cli: latest            # CLI holen
           build-config: RelWithDebInfo
 
       - name: Upload artifact
