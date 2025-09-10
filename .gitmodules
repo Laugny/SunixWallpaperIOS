@@ -1,0 +1,3 @@
+[submodule "vendor/geode"]
+	path = vendor/geode
+	url = https://github.com/geode-sdk/geode
