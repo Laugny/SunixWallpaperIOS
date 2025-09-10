@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "GEODE_SDK=$GEODE_SDK"
           ls -la "$GEODE_SDK"
-          test -f "$GEODE_SDK/cmake/GeodeFile.cmake" || { echo "GeodeFile.cmake fehlt!"; exit 1; }
+          test -f "$GEODE_SDK/cmake/Platform.cmake" || { echo "Platform.cmake fehlt!"; exit 1; }
 
       - name: Add dummy Geode profile
         run: geode profile add --name "CI Profile" "/tmp" mac
