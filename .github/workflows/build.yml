@@ -16,7 +16,7 @@ jobs:
         run: brew install geode-sdk/geode/geode-cli
 
       - name: Add dummy Geode profile
-        run: geode profile add "CI Profile" /tmp ios
+        run: geode profile add --name "CI Profile" "/tmp" mac
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
