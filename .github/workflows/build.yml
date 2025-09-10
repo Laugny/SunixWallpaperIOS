@@ -1,9 +1,3 @@
-name: build-ios
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
-
 jobs:
   ios:
     runs-on: macos-latest
@@ -15,8 +9,8 @@ jobs:
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      - name: Install iOS loader binaries into vendor/geode
-        run: geode sdk install-binaries --platform ios --sdk vendor/geode
+      - name: Install iOS loader binaries
+        run: geode sdk install-binaries --platform ios
 
       - name: Configure (Xcode for iOS)
         run: |
