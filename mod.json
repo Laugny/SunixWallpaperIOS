@@ -1,8 +1,8 @@
 {
   "geode": "4.8.0",
-  "gd": { "win": "2.2074", "android": "2.2074", "ios": "2.2074" },
+  "gd": { "ios": "2.2074" },
   "version": "1.0.0",
-  "id": "laugny.sunix-wallpaper",
+  "id": "SunixWallpaperIOS",
   "name": "Sunix Wallpaper",
   "developers": ["Laugny"],
   "description": "Custom Menu Wallpaper for Sunix Thingy 2",
