@@ -10,35 +10,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true   # wichtig: Submodule auschecken
-
-      - name: Verify submodule
-        run: |
-          git submodule status
-          ls -la "$GITHUB_WORKSPACE/vendor/geode"
+          submodules: true   # Submodule vendor/geode wirklich auschecken
 
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      # <-- HIER: SDK-Pfad bekannt machen
-      - name: Export GEODE_SDK for all next steps
-        run: echo "GEODE_SDK=$GITHUB_WORKSPACE/vendor/geode" >> "$GITHUB_ENV"
+      # GEODE_SDK korrekt (mit Expansion) für alle folgenden Steps setzen
+      - name: Export GEODE_SDK
+        shell: bash
+        run: echo "GEODE_SDK=${GITHUB_WORKSPACE}/vendor/geode" >> "$GITHUB_ENV"
+
+      # optional, aber hilfreich: CLI-internen Pfad auch setzen (kein Muss)
+      - name: Tell Geode CLI about SDK (optional)
+        run: geode sdk set-path "${GITHUB_WORKSPACE}/vendor/geode"
+
+      # prüfen, dass das Submodule wirklich da ist und die erwartete Datei existiert
+      - name: Verify SDK layout
+        shell: bash
+        run: |
+          echo "GEODE_SDK=$GEODE_SDK"
+          ls -la "$GEODE_SDK"
+          test -f "$GEODE_SDK/cmake/geode.cmake" || { echo "geode.cmake fehlt!"; exit 1; }
 
       - name: Add dummy Geode profile
-        run: geode profile add --name "CI Profile" "/tmp" mac
-
-      # Optional: CLI auch intern auf das Submodule zeigen lassen
-      - name: Set SDK path in Geode CLI (optional)
-        run: geode sdk set-path "$GITHUB_WORKSPACE/vendor/geode"
+        run: geode profile add --name "CI Profile" /tmp ios
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
 
       - name: Configure (Xcode for iOS)
         env:
-          GEODE_SDK: "$GITHUB_WORKSPACE/vendor/geode"
+          GEODE_SDK: ${{ env.GEODE_SDK }}   # garantiert an CMake durchgereicht
         run: |
           cmake -S . -B build-ios -G Xcode \
+            -DGEODE_TARGET_PLATFORM=iOS \
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
