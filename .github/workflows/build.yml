@@ -16,7 +16,7 @@ jobs:
         run: brew install geode-sdk/geode/geode-cli
 
       - name: Tell CLI to use SDK from submodule
-        run: geode sdk set-path vendor/geode
+        run: geode sdk set-path "vendor/geode"
 
       - name: Add dummy Geode profile
         run: geode profile add --name "CI Profile" "/tmp" mac
