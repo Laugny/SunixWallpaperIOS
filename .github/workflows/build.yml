@@ -15,10 +15,12 @@ jobs:
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      - name: Restore Geode profile
+      - name: Restore Geode profile (dummy for CI)
         run: |
           mkdir -p $HOME/.config/geode
           cp .github/geode/config.json $HOME/.config/geode/config.json
+          echo "Using config.json:"
+          cat $HOME/.config/geode/config.json
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
