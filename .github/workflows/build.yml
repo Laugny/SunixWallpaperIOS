@@ -7,6 +7,9 @@ on:
 jobs:
   ios:
     runs-on: macos-13
+    env:
+      # Deine GD-Version – passt zu deinem mod.json
+      GEODE_GD_VERSION: 2.2074
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,7 +26,10 @@ jobs:
             -DCMAKE_OSX_SYSROOT=iphoneos \
             -DCMAKE_OSX_ARCHITECTURES=arm64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DGEODE_BUILD_FROM_SOURCE=ON \
+            -DGEODE_GD_VERSION=${GEODE_GD_VERSION} \
+            -DGEODE_BUILD_TESTS=OFF
 
       - name: Build
         run: cmake --build build-ios --config RelWithDebInfo
