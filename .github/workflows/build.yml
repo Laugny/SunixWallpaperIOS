@@ -9,17 +9,15 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: recursive
 
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      - name: Tell CLI to use SDK from submodule
-        run: geode sdk set-path $GITHUB_WORKSPACE/vendor/geode
-
       - name: Add dummy Geode profile
         run: geode profile add --name "CI Profile" "/tmp" mac
+
+      - name: Install Geode SDK
+        run: geode sdk install
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
