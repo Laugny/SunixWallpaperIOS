@@ -10,19 +10,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      # Offizielle Action baut dein Mod & managed SDK/Binaries
-      - name: Build Geode mod (iOS)
-        id: build
-        uses: geode-sdk/build-geode-mod@main
         with:
-          target: iOS            # <- iOS-Target
-          sdk: latest            # SDK holen
-          cli: latest            # CLI holen
-          build-config: RelWithDebInfo
+          submodules: recursive   # <— wichtig, damit vendor/geode mitkommt
 
-      - name: Upload artifact
+      - name: Configure (Xcode for iOS)
+        run: |
+          cmake -S . -B build-ios -G Xcode \
+            -DCMAKE_SYSTEM_NAME=iOS \
+            -DCMAKE_OSX_SYSROOT=iphoneos \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: Build
+        run: cmake --build build-ios --config RelWithDebInfo
+
+      - name: Upload .geode
         uses: actions/upload-artifact@v4
         with:
           name: geode-ios
-          path: ${{ steps.build.outputs.build-output }}
+          path: build-ios/bin/*.geode
