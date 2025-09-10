@@ -22,6 +22,9 @@ jobs:
           echo "Using config.json:"
           cat $HOME/.local/share/geode/config.json
 
+      - name: Register dummy profile
+        run: geode profile add --name "CI Profile" /tmp ios
+
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
 
