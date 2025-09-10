@@ -17,10 +17,10 @@ jobs:
 
       - name: Restore Geode profile (dummy for CI)
         run: |
-          mkdir -p $HOME/.config/geode
-          cp .github/geode/config.json $HOME/.config/geode/config.json
+          mkdir -p $HOME/.local/share/geode
+          cp .github/geode/config.json $HOME/.local/share/geode/config.json
           echo "Using config.json:"
-          cat $HOME/.config/geode/config.json
+          cat $HOME/.local/share/geode/config.json
 
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
