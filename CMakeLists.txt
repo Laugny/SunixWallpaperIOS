@@ -1,34 +1,28 @@
 cmake_minimum_required(VERSION 3.21)
-project(SunixWallpaperIOS LANGUAGES C CXX)
+project(SunixWallpaper LANGUAGES C CXX)
 
-# GEODE_SDK aus -DGEODE_SDK oder ENV übernehmen
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Quellen
+file(GLOB_RECURSE MOD_SOURCES CONFIGURE_DEPENDS src/*.cpp)
+
+# --- Geode SDK finden ---
 if(NOT DEFINED GEODE_SDK AND DEFINED ENV{GEODE_SDK})
     set(GEODE_SDK "$ENV{GEODE_SDK}")
 endif()
 
-if(NOT GEODE_SDK OR NOT EXISTS "${GEODE_SDK}/cmake/geode.cmake")
-    message(FATAL_ERROR
-      "GEODE_SDK ist nicht gesetzt oder ungültig: '${GEODE_SDK}'. "
-      "Setze GEODE_SDK auf den Geode-SDK-Pfad (geode sdk install / set-path).")
+if(NOT GEODE_SDK OR NOT EXISTS "${GEODE_SDK}/cmake/GeodeFile.cmake")
+    message(FATAL_ERROR "GEODE_SDK ist nicht gesetzt oder ungültig: '${GEODE_SDK}'")
 endif()
 
-include("${GEODE_SDK}/cmake/geode.cmake")
+include("${GEODE_SDK}/cmake/GeodeFile.cmake")
 
-# iOS als Zielplattform (Groß-/Kleinschreibung beachten)
+# Plattform für iOS
 set(GEODE_TARGET_PLATFORM iOS CACHE STRING "Geode target platform")
 
-# Quellen & Ressourcen
-set(MOD_SOURCES
-    src/main.cpp
-)
-set(MOD_RESOURCES
-    res
-)
-
-# Mod bauen
+# Mod definieren
 geode_add_mod(
     SOURCES   ${MOD_SOURCES}
-    RESOURCES ${MOD_RESOURCES}
+    RESOURCES res
 )
-
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
