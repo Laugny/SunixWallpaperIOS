@@ -5,11 +5,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Projektname = ID aus mod.json (SunixWallpaperIOS)
 project(SunixWallpaperIOS VERSION 1.0.0)
 
-# Quellcode einsammeln
-file(GLOB_RECURSE MOD_SOURCES CONFIGURE_DEPENDS src/*.cpp)
+set(SOURCES src/main.cpp)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-# Das Mod‑Binary erstellen
-add_library(${PROJECT_NAME} SHARED ${MOD_SOURCES})
 
 # Geode SDK einbinden
 if (NOT DEFINED ENV{GEODE_SDK})
@@ -27,6 +25,7 @@ set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "")
 setup_geode_mod(${PROJECT_NAME}
     EXTERNALS geode.node-ids:1.21.1
 )
+
 
 
 
