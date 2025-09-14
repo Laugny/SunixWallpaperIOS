@@ -1,4 +1,4 @@
-name: build-iosKURAC
+name: build-ios
 on:
   push:
     branches: [ main ]
