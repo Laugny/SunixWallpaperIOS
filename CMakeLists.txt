@@ -17,10 +17,19 @@ if (NOT DEFINED ENV{GEODE_SDK})
 endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# Mod mit Geode verlinken und Ressourcen packen
+# iOS‑Code signing komplett deaktivieren, damit Xcode keine Team‑ID verlangt
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_ALLOWED "NO")
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED "NO")
+set(CMAKE_XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "")
+set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "")
+
+# Für iOS-Builds wird standardmässig eine iOS‑Plattform generiert; die restliche Konfiguration bleibt gleich
 setup_geode_mod(${PROJECT_NAME}
     EXTERNALS geode.node-ids:1.21.1
 )
+
+)
+
 
 
 
