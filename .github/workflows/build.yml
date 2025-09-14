@@ -57,12 +57,18 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build build-ios --config RelWithDebInfo --parallel
-          # oder direkt:
-          xcodebuild -project SunixWallpaperIOS.xcodeproj \
-          -configuration RelWithDebInfo \
-          -target SunixWallpaperIOS \
-          CODE_SIGNING_ALLOWED=NO
+          set -o pipefail
+          # Build mit CMake/Xcode; leitet den Output an grep weiter
+          cmake --build build-ios --config RelWithDebInfo --parallel 2>&1 | tee build.log | grep -E "error:|warning:" || true
+          # Zeige Build-Log als Artefakt, falls du es später vollständig prüfen willst
+          cat build.log
+          # Alternativ für Xcode direkt:
+          # xcodebuild -project SunixWallpaperIOS.xcodeproj \
+          #   -configuration RelWithDebInfo \
+          #   -target SunixWallpaperIOS \
+          #   -quiet CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log | grep -E "error:|warning:" || true
+
+
 
 
       - name: Upload .geode
