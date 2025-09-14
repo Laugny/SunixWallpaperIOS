@@ -1,68 +1,57 @@
-name: build-ios
+name: Build Geode Mod
+
 on:
-  push:
-    branches: [ main ]
   workflow_dispatch:
+  push:
+    branches:
+      - "**"
 
 jobs:
-  ios:
-    runs-on: macos-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        # - name: Windows
+        #  os: windows-latest
+
+        # - name: macOS
+        #  os: macos-latest
+
+        - name: iOS
+          os: macos-latest
+          target: iOS
+
+      # - name: Android32
+        #  os: ubuntu-latest
+        # target: Android32
+
+        # - name: Android64
+        #  os: ubuntu-latest
+        #  target: Android64
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Build the mod
+        uses: geode-sdk/build-geode-mod@main
         with:
-          submodules: recursive
+          combine: true
+          target: ${{ matrix.config.target }}
 
-      - name: Install Geode CLI
-        run: brew install geode-sdk/geode/geode-cli
+  package:
+    name: Package builds
+    runs-on: ubuntu-latest
+    needs: ['build']
 
-      # GEODE_SDK-Variable für alle nachfolgenden Schritte setzen
-      - name: Export GEODE_SDK
-        run: echo "GEODE_SDK=${{ github.workspace }}/vendor/geode" >> "$GITHUB_ENV"
+    steps:
+      - uses: geode-sdk/build-geode-mod/combine@main
+        id: build
 
-      - name: Add dummy Geode profile
-        run: geode profile add --name "CI Profile" "/tmp" mac
-
-      - name: Install iOS loader binaries
-        run: geode sdk install-binaries --platform ios
-
-      # Build-Verzeichnisse und Caches vor dem Konfigurieren löschen
-      - name: Clean build directories and caches
-        run: |
-          rm -rf build-ios
-          rm -rf build
-          rm -rf ~/.cache/ccache || true
-          rm -rf ~/.ccache || true
-
-      - name: Configure (Xcode for iOS)
-        env:
-          GEODE_SDK: ${{ env.GEODE_SDK }}
-        run: |
-          cmake -S . -B build-ios -G Xcode \
-            -DGEODE_TARGET_PLATFORM=iOS \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo
-
-      # Build: Das Packaging-Target erstellt die .geode-Datei
-      - name: Build (fail on error)
-        run: cmake --build build-ios --config RelWithDebInfo --target SunixWallpaperIOS_PACKAGE --parallel
-
-      # .geode in eigenen build-Ordner kopieren
-      - name: Copy .geode to build/
-        run: |
-          mkdir -p build
-          geode_file=$(find build-ios -name '*.geode' -print -quit || true)
-          if [ -z "$geode_file" ]; then
-            echo "Keine .geode gefunden!"
-            exit 1
-          fi
-          cp "$geode_file" build/
-
-      - name: Upload .geode
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: geode-ios
-          path: build/*.geode
-          if-no-files-found: error
+          name: Build Output
+          path: ${{ steps.build.outputs.build-output }}
