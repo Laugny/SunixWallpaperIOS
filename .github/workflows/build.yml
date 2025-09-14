@@ -56,7 +56,14 @@ jobs:
 
 
       - name: Build
-        run: cmake --build build-ios --config RelWithDebInfo
+        run: |
+          cmake --build build-ios --config RelWithDebInfo --parallel
+          # oder direkt:
+          xcodebuild -project SunixWallpaperIOS.xcodeproj \
+          -configuration RelWithDebInfo \
+          -target SunixWallpaperIOS \
+          CODE_SIGNING_ALLOWED=NO
+
 
       - name: Upload .geode
         uses: actions/upload-artifact@v4
