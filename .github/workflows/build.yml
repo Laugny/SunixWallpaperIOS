@@ -18,48 +18,35 @@ jobs:
       - name: Export GEODE_SDK
         run: echo "GEODE_SDK=${GITHUB_WORKSPACE}/vendor/geode" >> "$GITHUB_ENV"
 
-      - name: Tell Geode CLI about SDK (optional)
-        run: geode sdk set-path "${GITHUB_WORKSPACE}/vendor/geode"
+      # Dummy profile und iOS‑Binaries holen
+      - run: geode profile add --name "CI Profile" "/tmp" mac
+      - run: geode sdk install-binaries --platform ios
 
-      - name: Verify SDK layout
-        run: |
-          echo "GEODE_SDK=$GEODE_SDK"
-          ls -la "$GEODE_SDK"
-          test -f "$GEODE_SDK/cmake/Platform.cmake" || { echo "Platform.cmake fehlt!"; exit 1; }
-
-      - name: Add dummy Geode profile
-        run: geode profile add --name "CI Profile" "/tmp" mac
-
-      - name: Install iOS loader binaries
-        run: geode sdk install-binaries --platform ios
-
-      - name: Configure (Xcode for iOS)
+      - name: Configure
         env:
           GEODE_SDK: ${{ env.GEODE_SDK }}
-        run: |
-          cmake -S . -B build-ios -G Xcode \
-            -DGEODE_TARGET_PLATFORM=iOS \
-            -DCMAKE_SYSTEM_NAME=iOS \
-            -DCMAKE_OSX_SYSROOT=iphoneos \
-            -DCMAKE_OSX_ARCHITECTURES=arm64 \
-            -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+        run: >
+          cmake -S . -B build-ios -G Xcode
+          -DGEODE_TARGET_PLATFORM=iOS
+          -DCMAKE_SYSTEM_NAME=iOS
+          -DCMAKE_OSX_SYSROOT=iphoneos
+          -DCMAKE_OSX_ARCHITECTURES=arm64
+          -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-      - name: Build (only show errors/warnings)
+      - name: Build (stop on error)
         run: |
           set -o pipefail
-          # Build das PACKAGE-Target, sonst wird keine .geode erzeugt
-          cmake --build build-ios --config RelWithDebInfo --target SunixWallpaperIOS_PACKAGE --parallel 2>&1 \
-            | tee build-ios.log | grep -E "error:|warning:" || true
+          cmake --build build-ios --config RelWithDebInfo --target SunixWallpaperIOS_PACKAGE --parallel | tee build-ios.log
 
-      - name: Copy .geode to build/
+      - name: Copy .geode to ./build
         run: |
           mkdir -p build
           geode_file=$(find build-ios -name '*.geode' -print -quit || true)
           if [ -z "$geode_file" ]; then
-            echo "Keine .geode gefunden!"; ls -R build-ios; exit 1
+            echo "Keine .geode gefunden! Build hat vermutlich schon vorher wegen eines Fehlers abgebrochen."
+            exit 1
           fi
-          echo "Gefundene Geode-Datei: $geode_file"
           cp "$geode_file" build/
 
       - name: Upload .geode
