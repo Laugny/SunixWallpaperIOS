@@ -30,9 +30,9 @@ static bool suppressionOn() {
     return gInLevelOrEditor && userWants;
 }
 
-static CCParticleSystemQuad* gEmitter = nullptr; // persistent menu emitter
+static CCParticleSystemQuad* gEmitter = nullptr; // einmalig erstellt & retained
 
-// Helper: get first child of a certain type
+// Helper: finde Kinder vom Typ T
 template <typename T>
 T* getChildOfType(CCNode* parent, int index = 0) {
     if (!parent) return nullptr;
@@ -54,7 +54,7 @@ static bool ends_with(const std::string& s, const char* suf) {
     return s.size() >= n && s.compare(s.size() - n, n, suf) == 0;
 }
 
-// Construct background menu with wallpaper and tree
+// Hintergrundmenü mit Wallpaper und Baum
 CCMenu* st2BG() {
     auto win = CCDirector::sharedDirector()->getWinSize();
     auto menu = CCMenu::create();
@@ -63,7 +63,6 @@ CCMenu* st2BG() {
     menu->setAnchorPoint({0, 0});
     menu->setID("st2-background");
 
-    // background
     auto bg = CCSprite::create("background.png"_spr);
     if (!bg) {
         log::error("background.png not found");
@@ -71,19 +70,21 @@ CCMenu* st2BG() {
     }
     bg->setID("background");
     bg->setPosition(win / 2);
-    float bgScale = std::max(win.height / bg->getContentSize().height, win.width / bg->getContentSize().width);
+    float bgScale = std::max(win.height / bg->getContentSize().height,
+                             win.width  / bg->getContentSize().width);
     bg->setScale(bgScale);
+
     auto bgSeq = CCArray::create();
     bgSeq->addObject(CCScaleTo::create(20.f, bgScale * 1.1f));
     bgSeq->addObject(CCScaleTo::create(20.f, bgScale));
     bg->runAction(CCRepeatForever::create(CCSequence::create(bgSeq)));
     menu->addChild(bg, 0);
 
-    // tree (optional)
     if (auto tree = CCSprite::create("tree.png"_spr)) {
         tree->setID("tree");
         tree->setPosition(win / 2);
-        float tScale = std::max(win.height / tree->getContentSize().height, win.width / tree->getContentSize().width);
+        float tScale = std::max(win.height / tree->getContentSize().height,
+                                win.width  / tree->getContentSize().width);
         tree->setScale(tScale);
         auto tSeq = CCArray::create();
         tSeq->addObject(CCScaleTo::create(20.f, tScale * 1.2f));
@@ -95,7 +96,7 @@ CCMenu* st2BG() {
     return menu;
 }
 
-// Hide gradient backgrounds in a layer
+// Blendet Vanilla-Gradients aus
 static void hideGradientsInLayer(CCLayer* layer) {
     if (!layer) return;
     auto* cacheDict = CCTextureCache::sharedTextureCache()->m_pTextures;
@@ -109,7 +110,8 @@ static void hideGradientsInLayer(CCLayer* layer) {
                             const std::string& key = kv.first;
                             CCTexture2D* obj = kv.second;
                             if (obj == tex &&
-                                (ends_with(key, "GJ_gradientBG.png") || ends_with(key, "GJ_gradientBG-hd.png"))) {
+                                (ends_with(key, "GJ_gradientBG.png") ||
+                                 ends_with(key, "GJ_gradientBG-hd.png"))) {
                                 sprite->setVisible(false);
                                 break;
                             }
@@ -121,7 +123,7 @@ static void hideGradientsInLayer(CCLayer* layer) {
     }
 }
 
-// Ensure a background menu is attached to host
+// Hängt das Menü-BG an
 static void ensureBG(CCNode* host, int zBack = -999) {
     if (!host) return;
     if (!host->getChildByID("st2-background")) {
@@ -129,10 +131,9 @@ static void ensureBG(CCNode* host, int zBack = -999) {
     }
 }
 
-// Create the emitter once and retain it
+// Erstellt gEmitter EINMAL (ohne Reset)
 static void ensureEmitterCreated() {
     if (gEmitter || !Mod::get()->getSettingValue<bool>("particles")) return;
-
     std::string plist = "particleEffect.plist"_spr;
     std::string dir;
     if (!plist.empty()) {
@@ -149,18 +150,16 @@ static void ensureEmitterCreated() {
         log::error("Particles: initWithDictionary failed (dir={})", dir);
         return;
     }
-    // fallback texture
     if (!emitter->getTexture()) {
         if (auto spr = CCSprite::create("sun.png"_spr))
             emitter->setTexture(spr->getTexture());
     }
-    // default settings if PLIST left blank
     emitter->setDuration(-1);
     emitter->setEmitterMode(kCCParticleModeGravity);
     emitter->setOpacityModifyRGB(true);
     auto win = CCDirector::sharedDirector()->getWinSize();
     emitter->setPosition(ccp(win.width * 0.5f, 0.f));
-    emitter->setPosVar(ccp(win.width * 0.5f, 0.f));
+    emitter->setPosVar  (ccp(win.width * 0.5f, 0.f));
     emitter->setGravity(ccp(0.f, 160.f));
     emitter->setAngle(90.f);
     emitter->setAngleVar(5.f);
@@ -187,7 +186,7 @@ static void ensureEmitterCreated() {
               gEmitter->getEmissionRate());
 }
 
-// Attach emitter to background menu without resetting its state
+// Hängt den Emitter an das Hintergrund-Menü (ohne Reset)
 static void attachEmitterToMenuBG(CCLayer* layer) {
     if (!layer || !gEmitter) return;
     auto menu = dynamic_cast<CCNode*>(layer->getChildByID("st2-background"));
@@ -199,7 +198,7 @@ static void attachEmitterToMenuBG(CCLayer* layer) {
     menu->addChild(gEmitter, 2);
 }
 
-// Replace the default menu background
+// Ersetzt das Standard-BG mit unserem
 static void replaceBG(CCLayer* layer) {
     if (!layer) return;
     hideGradientsInLayer(layer);
@@ -227,7 +226,7 @@ static void replaceBG(CCLayer* layer) {
     attachEmitterToMenuBG(layer);
 }
 
-// Hook MenuLayer.init()
+// Hook MenuLayer.init
 class $modify(MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
@@ -243,11 +242,11 @@ class $modify(MenuLayer) {
 class $modify(CCDirector) {
     void willSwitchToScene(CCScene* scene) {
         CCDirector::willSwitchToScene(scene);
-        // detect play/editor
         bool isPlay = getChildOfType<PlayLayer>(scene, 0) != nullptr;
         bool isEdit = getChildOfType<LevelEditorLayer>(scene, 0) != nullptr;
         gInLevelOrEditor = (isPlay || isEdit);
-        log::info("[Sunix Wallpaper] gameplay particles {}", gInLevelOrEditor ? "SUPPRESSED" : "ENABLED");
+        log::info("[Sunix Wallpaper] gameplay particles {}",
+                  gInLevelOrEditor ? "SUPPRESSED" : "ENABLED");
         if (auto layer = getChildOfType<CCLayer>(scene, 0)) {
             if (!dynamic_cast<SecretLayer*>(layer)
              && !dynamic_cast<SecretLayer2*>(layer)
@@ -267,7 +266,7 @@ class $modify(CCDirector) {
     }
 };
 
-// Hook LevelInfoLayer::onPlay for darkening UI
+// Hook LevelInfoLayer.onPlay für dunklere UI
 class $modify(LevelInfoLayer) {
     void onPlay(CCObject* sender) {
         LevelInfoLayer::onPlay(sender);
@@ -294,7 +293,7 @@ class $modify(LevelInfoLayer) {
     }
 };
 
-// Global override: suppress gameplay particles
+// Globale Unterdrückung von Partikeln im Gameplay
 class $modify(CCParticleSystemQuad) {
     void draw() {
         if (suppressionOn()) {
