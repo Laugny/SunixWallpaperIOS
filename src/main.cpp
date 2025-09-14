@@ -51,7 +51,7 @@ T* getChildOfType(CCNode* parent, int index = 0) {
     if (auto* children = parent->getChildren()) {
         for (unsigned int i = 0; i < children->count(); ++i) {
             CCNode* child = static_cast<CCNode*>(children->objectAtIndex(i));
-            if (auto casted = static_cast<T*>(child)) {
+            if (auto casted = typeinfo_cast<T*>(child)) {
                 if (count == index) return casted;
                 ++count;
             }
@@ -126,8 +126,8 @@ static void hideGradientsInLayer(CCLayer* layer) {
 
     if (auto* children = layer->getChildren()) {
         for (unsigned int i = 0; i < children->count(); ++i) {
-            if (auto sprite = static_cast<CCSprite*>(children->objectAtIndex(i))) {
-                if (auto tp = static_cast<CCTextureProtocol*>(sprite)) {
+            if (auto sprite = typeinfo_cast<CCSprite*>(children->objectAtIndex(i))) {
+                if (auto tp = typeinfo_cast<CCTextureProtocol*>(sprite)) {
                     if (auto tex = tp->getTexture()) {
                         for (auto kv : CCDictionaryExt<std::string, CCTexture2D*>(cacheDict)) {
                             const std::string& key = kv.first;
@@ -230,7 +230,7 @@ static void ensureEmitterCreated() {
 // Emitter an das aktuelle Menü-BG-Menü hängen (ohne Reset)
 static void attachEmitterToMenuBG(CCLayer* layer) {
     if (!layer || !gEmitter) return;
-    auto menu = static_cast<CCNode*>(layer->getChildByID("st2-background"));
+    auto menu = typeinfo_cast<CCNode*>(layer->getChildByID("st2-background"));
     if (!menu) return;
 
     if (gEmitter->getParent() == menu) return;
@@ -253,7 +253,7 @@ void replaceBG(CCLayer* layer) {
 
     ensureBG(layer, -999);
 
-    if (static_cast<LevelSelectLayer*>(layer)) {
+    if (typeinfo_cast<LevelSelectLayer*>(layer)) {
         if (auto ground = getChildOfType<GJGroundLayer>(layer, 0))
             ground->setVisible(false);
     }
@@ -261,12 +261,12 @@ void replaceBG(CCLayer* layer) {
     if (auto* children = layer->getChildren()) {
         for (unsigned int i = 0; i < children->count(); ++i) {
             CCNode* child = static_cast<CCNode*>(children->objectAtIndex(i));
-            if (auto nine = static_cast<CCScale9Sprite*>(child)) {
+            if (auto nine = typeinfo_cast<CCScale9Sprite*>(child)) {
                 nine->setOpacity(100);
                 nine->setColor(ccc3(0, 0, 0));
                 child->setScale(child->getScale() * 0.5f);
                 child->setContentSize(child->getContentSize() / 0.5f);
-            } else if (auto ti = static_cast<CCTextInputNode*>(child)) {
+            } else if (auto ti = typeinfo_cast<CCTextInputNode*>(child)) {
                 ti->setLabelPlaceholderColor(ccc3(255, 255, 255));
             }
         }
@@ -304,12 +304,12 @@ class $modify(CCDirector) {
 
         // In Menüs: BG aufbauen und (falls vorhanden) Emitter rüberhängen
         if (auto layer = getChildOfType<CCLayer>(scene, 0)) {
-            if (!static_cast<SecretLayer*>(layer)
-             && !static_cast<SecretLayer2*>(layer)
-             && !static_cast<SecretLayer3*>(layer)
-             && !static_cast<SecretLayer4*>(layer)
-             && !static_cast<SecretRewardsLayer*>(layer)
-             && !static_cast<GauntletSelectLayer*>(layer)) {
+            if (!typeinfo_cast<SecretLayer*>(layer)
+             && !typeinfo_cast<SecretLayer2*>(layer)
+             && !typeinfo_cast<SecretLayer3*>(layer)
+             && !typeinfo_cast<SecretLayer4*>(layer)
+             && !typeinfo_cast<SecretRewardsLayer*>(layer)
+             && !typeinfo_cast<GauntletSelectLayer*>(layer)) {
                 if (!gInLevelOrEditor) {
                     replaceBG(layer);
                 } else {
@@ -338,10 +338,10 @@ class $modify(LevelInfoLayer) {
         if (auto* children = sprite->getChildren()) {
             for (unsigned int i = 0; i < children->count(); ++i) {
                 CCNode* c = static_cast<CCNode*>(children->objectAtIndex(i));
-                if (!static_cast<CCProgressTimer*>(c)) {
+                if (!typeinfo_cast<CCProgressTimer*>(c)) {
                     if (c->getZOrder() == -4) {
                         c->setVisible(false);
-                    } else if (auto rgba = static_cast<CCNodeRGBA*>(c)) {
+                    } else if (auto rgba = typeinfo_cast<CCNodeRGBA*>(c)) {
                         rgba->setOpacity(100);
                         rgba->setColor(ccc3(0, 0, 0));
                         rgba->setCascadeOpacityEnabled(false);
@@ -362,6 +362,3 @@ class $modify(CCParticleSystemQuad) {
         CCParticleSystemQuad::draw();
     }
 };
-
-
-
