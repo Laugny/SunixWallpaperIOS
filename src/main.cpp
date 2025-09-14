@@ -2,7 +2,32 @@
 #include <Geode/modify/MenuLayer.hpp>
 #include <Geode/modify/CCDirector.hpp>
 #include <Geode/modify/LevelInfoLayer.hpp>
+
+// Menüs, die wir überspringen
+#include <Geode/modify/SecretLayer.hpp>
+#include <Geode/modify/SecretLayer2.hpp>
+#include <Geode/modify/SecretLayer3.hpp>
+#include <Geode/modify/SecretLayer4.hpp>
+#include <Geode/modify/SecretRewardsLayer.hpp>
+#include <Geode/modify/GauntletSelectLayer.hpp>
+
+// Gameplay-Erkennung
+#include <Geode/modify/PlayLayer.hpp>
+#include <Geode/modify/LevelEditorLayer.hpp>
+
+// Sonstige Layer
+#include <Geode/modify/LevelSelectLayer.hpp>
+#include <Geode/modify/GJGroundLayer.hpp>
+#include <Geode/modify/MenuGameLayer.hpp>
+#include <Geode/modify/CCScale9Sprite.hpp>
+#include <Geode/modify/CCTextInputNode.hpp>
+
+// Partikel-Override
+#include <Geode/modify/CCParticleSystemQuad.hpp>
+
 #include <Geode/utils/cocos.hpp>
+#include <algorithm>
+#include <cstring>
 
 USING_NS_CC;
 using namespace geode::prelude;
@@ -87,7 +112,9 @@ CCMenu* st2BG() {
         menu->addChild(tree, 1);
     }
 
-    // Emitter wird separat erstellt und bei Szenewechsel angehängt
+    // *** WICHTIG: Partikel NICHT hier erstellen/anhängen ***
+    // -> gEmitter wird getrennt erstellt & bei Szenewechsel repar­ented
+
     return menu;
 }
 
@@ -119,7 +146,7 @@ static void hideGradientsInLayer(CCLayer* layer) {
     }
 }
 
-void ensureBG(CCNode* host, int zBack = -999) {
+static void ensureBG(CCNode* host, int zBack = -999) {
     if (!host) return;
     if (!host->getChildByID("st2-background")) {
         host->addChild(st2BG(), zBack);
@@ -178,16 +205,18 @@ static void ensureEmitterCreated() {
     if (emitter->getStartSize() <= 0.f) emitter->setStartSize(8.f);
     if (emitter->getEndSize()   <  0.f) emitter->setEndSize(4.f);
 
+    // PMA-freundliches Alpha
     emitter->setBlendFunc({ GL_ONE, GL_ONE_MINUS_SRC_ALPHA });
 
     emitter->setID("emitter");
     emitter->setVisible(true);
     emitter->setAutoRemoveOnFinish(false);
 
-    // Nur beim ersten Mal starten (resetSystem killt alle Partikel)
+    // Nur beim ersten Mal starten (resetSystem killt Partikel)
     emitter->resetSystem();
 
-    emitter->retain();
+    // persistent machen
+    emitter->retain();   // wir managen das selbst (reparenten ohne cleanup)
     gEmitter = emitter;
 
     log::info("[Sunix Wallpaper]: Particles CREATED: tex={}, total={}, life={}, rate={}",
@@ -206,22 +235,28 @@ static void attachEmitterToMenuBG(CCLayer* layer) {
 
     if (gEmitter->getParent() == menu) return;
 
+    // vom alten Parent lösen, Zustand behalten
     if (gEmitter->getParent()) {
-        gEmitter->removeFromParentAndCleanup(false); // state behalten
+        gEmitter->removeFromParentAndCleanup(false); // keep state/schedule
     }
-    menu->addChild(gEmitter, 2);
+    menu->addChild(gEmitter, 2); // über BG/Tree, unter UI
 }
 
-void replaceBG(CCLayer* layer) {
+static void replaceBG(CCLayer* layer) {
     if (!layer) return;
 
     hideGradientsInLayer(layer);
 
-    if (auto mgl = getChildOfType<MenuLayer>(layer, 0)) {
+    if (auto mgl = getChildOfType<MenuGameLayer>(layer, 0)) {
         mgl->setVisible(false);
     }
 
     ensureBG(layer, -999);
+
+    if (dynamic_cast<LevelSelectLayer*>(layer)) {
+        if (auto ground = getChildOfType<GJGroundLayer>(layer, 0))
+            ground->setVisible(false);
+    }
 
     if (auto* children = layer->getChildren()) {
         for (unsigned int i = 0; i < children->count(); ++i) {
@@ -237,6 +272,7 @@ void replaceBG(CCLayer* layer) {
         }
     }
 
+    // Emitter bei Menü-Szenen anhängen (ohne Neustart)
     attachEmitterToMenuBG(layer);
 }
 
@@ -244,7 +280,10 @@ void replaceBG(CCLayer* layer) {
 class $modify(MenuLayer) {
     bool init() {
         if (!MenuLayer::init()) return false;
+        if (auto mgl = getChildOfType<MenuGameLayer>(this, 0)) mgl->setVisible(false);
         ensureBG(this, -999);
+
+        // Beim ersten Einstieg ins Hauptmenü ggf. Emitter erstellen & anhängen
         ensureEmitterCreated();
         attachEmitterToMenuBG(this);
         return true;
@@ -254,22 +293,31 @@ class $modify(MenuLayer) {
 class $modify(CCDirector) {
     void willSwitchToScene(CCScene* scene) {
         CCDirector::willSwitchToScene(scene);
-        // Gameplay-Erkennung: PlayLayer oder LevelEditorLayer?
-        bool isPlay = getChildOfType<PlayLayer>(scene, 0) != nullptr;
-        bool isEdit = getChildOfType<LevelEditorLayer>(scene, 0) != nullptr;
+
+        // Gameplay-Erkennung robust: PlayLayer/Editor direkt suchen
+        bool isPlay  = getChildOfType<PlayLayer>(scene, 0)       != nullptr;
+        bool isEdit  = getChildOfType<LevelEditorLayer>(scene, 0) != nullptr;
         gInLevelOrEditor = (isPlay || isEdit);
 
         log::info("[Sunix Wallpaper] gameplay particles {}",
                   gInLevelOrEditor ? "SUPPRESSED" : "ENABLED");
 
-        // In Menüs: BG aufbauen und Emitter anhängen
+        // In Menüs: BG aufbauen und (falls vorhanden) Emitter rüberhängen
         if (auto layer = getChildOfType<CCLayer>(scene, 0)) {
-            if (!gInLevelOrEditor) {
-                replaceBG(layer);
-            } else {
-                // Beim Eintritt ins Level Emitter vom Menü lösen, aber behalten
-                if (gEmitter && gEmitter->getParent()) {
-                    gEmitter->removeFromParentAndCleanup(false);
+            if (!dynamic_cast<SecretLayer*>(layer)
+             && !dynamic_cast<SecretLayer2*>(layer)
+             && !dynamic_cast<SecretLayer3*>(layer)
+             && !dynamic_cast<SecretLayer4*>(layer)
+             && !dynamic_cast<SecretRewardsLayer*>(layer)
+             && !dynamic_cast<GauntletSelectLayer*>(layer)) {
+                if (!gInLevelOrEditor) {
+                    replaceBG(layer);
+                } else {
+                    // Beim Eintritt ins Level den Emitter ggf. vom alten Menü lösen,
+                    // damit er nicht zerstört wird, wenn die Menüszenen freigegeben werden
+                    if (gEmitter && gEmitter->getParent()) {
+                        gEmitter->removeFromParentAndCleanup(false);
+                    }
                 }
             }
         }
@@ -279,7 +327,7 @@ class $modify(CCDirector) {
 class $modify(LevelInfoLayer) {
     void onPlay(CCObject* sender) {
         LevelInfoLayer::onPlay(sender);
-        // PlayButton anpassen, damit UI dunkler wird
+
         CCNode* playMenu   = this->getChildByID("play-menu");
         if (!playMenu) return;
         CCNode* playButton = playMenu->getChildByID("play-button");
@@ -301,5 +349,16 @@ class $modify(LevelInfoLayer) {
                 }
             }
         }
+    }
+};
+
+// == Globale Partikel-Unterdrückung im Gameplay ==
+class $modify(CCParticleSystemQuad) {
+    void draw() {
+        if (suppressionOn()) {
+            // Nichts zeichnen im Level/Editor (unsere Menü-Partikel hängen dort nicht)
+            return;
+        }
+        CCParticleSystemQuad::draw();
     }
 };
