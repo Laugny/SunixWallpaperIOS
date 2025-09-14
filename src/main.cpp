@@ -50,7 +50,7 @@ T* getChildOfType(CCNode* parent, int index = 0) {
     int count = 0;
     if (auto* children = parent->getChildren()) {
         for (unsigned int i = 0; i < children->count(); ++i) {
-            CCNode* child = static_cast<CCNode*>(children->objectAtIndex(i));
+            CCNode* child = typeinfo_cast<CCNode*>(children->objectAtIndex(i));
             if (auto casted = typeinfo_cast<T*>(child)) {
                 if (count == index) return casted;
                 ++count;
@@ -200,7 +200,7 @@ static void ensureEmitterCreated() {
     emitter->setTotalParticles(total);
     emitter->setLife(life);
     if (emitter->getEmissionRate() <= 0.f)
-        emitter->setEmissionRate(static_cast<float>(total) / life);
+        emitter->setEmissionRate(typeinfo_cast<float>(total) / life);
 
     if (emitter->getStartSize() <= 0.f) emitter->setStartSize(8.f);
     if (emitter->getEndSize()   <  0.f) emitter->setEndSize(4.f);
@@ -220,7 +220,7 @@ static void ensureEmitterCreated() {
     gEmitter = emitter;
 
     log::info("[Sunix Wallpaper]: Particles CREATED: tex={}, total={}, life={}, rate={}",
-        static_cast<const void*>(gEmitter->getTexture()),
+        typeinfo_cast<const void*>(gEmitter->getTexture()),
         gEmitter->getTotalParticles(),
         gEmitter->getLife(),
         gEmitter->getEmissionRate()
@@ -260,7 +260,7 @@ void replaceBG(CCLayer* layer) {
 
     if (auto* children = layer->getChildren()) {
         for (unsigned int i = 0; i < children->count(); ++i) {
-            CCNode* child = static_cast<CCNode*>(children->objectAtIndex(i));
+            CCNode* child = typeinfo_cast<CCNode*>(children->objectAtIndex(i));
             if (auto nine = typeinfo_cast<CCScale9Sprite*>(child)) {
                 nine->setOpacity(100);
                 nine->setColor(ccc3(0, 0, 0));
@@ -337,7 +337,7 @@ class $modify(LevelInfoLayer) {
 
         if (auto* children = sprite->getChildren()) {
             for (unsigned int i = 0; i < children->count(); ++i) {
-                CCNode* c = static_cast<CCNode*>(children->objectAtIndex(i));
+                CCNode* c = typeinfo_cast<CCNode*>(children->objectAtIndex(i));
                 if (!typeinfo_cast<CCProgressTimer*>(c)) {
                     if (c->getZOrder() == -4) {
                         c->setVisible(false);
@@ -362,4 +362,5 @@ class $modify(CCParticleSystemQuad) {
         CCParticleSystemQuad::draw();
     }
 };
+
 
