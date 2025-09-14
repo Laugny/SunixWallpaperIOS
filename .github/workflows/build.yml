@@ -70,9 +70,23 @@ jobs:
 
 
 
+      - name: Collect .geode into ./build
+        shell: bash
+        run: |
+          mkdir -p build
+          # finde erste gefundene .geode in allen typischen Multi-Config-Ordnern
+          found="$(find build-ios -name '*.geode' -print -quit || true)"
+          if [ -z "$found" ]; then
+            echo "Keine .geode gefunden! Verzeichnisse:"
+            ls -R build-ios || true
+            exit 1
+          fi
+          echo "Gefunden: $found"
+          cp "$found" build/
 
       - name: Upload .geode
         uses: actions/upload-artifact@v4
         with:
           name: geode-ios
-          path: build-ios/bin/*.geode
+          path: build/*.geode
+          if-no-files-found: error
