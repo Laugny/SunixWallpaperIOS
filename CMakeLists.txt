@@ -17,11 +17,10 @@ if (NOT DEFINED ENV{GEODE_SDK})
 endif()
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 
-# set(GEODE_DISABLE_CLI_CALLS ON)
-
 # Mod mit Geode verlinken und Ressourcen packen
 setup_geode_mod(${PROJECT_NAME}
     EXTERNALS geode.node-ids:1.21.1
 )
+
 
 
