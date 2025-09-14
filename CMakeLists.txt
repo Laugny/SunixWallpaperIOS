@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Projektname = exakt die ID aus mod.json (CMake-kompatibel, keine Punkte/Bindestriche!)
-project(laugny_sunix_wallpaper VERSION 1.0.0)
+project(SunixWallpaperIOS VERSION 1.0.0)
 
 # Source-Dateien einsammeln
 file(GLOB_RECURSE MOD_SOURCES CONFIGURE_DEPENDS src/*.cpp)
@@ -34,7 +34,8 @@ add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 # setup_geode_mod legt automatisch das CMake-Target an,
 # verlinkt die SDK-Libs und integriert Ressourcen.
 # -------------------------------------------------------------
-setup_geode_mod(${PROJECT_NAME}
+setup_geode_mod(SunixWallpaperIOS
     SOURCES   ${MOD_SOURCES}
     RESOURCES res
 )
+
