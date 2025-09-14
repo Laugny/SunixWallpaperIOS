@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Projektname = ID aus mod.json (SunixWallpaperIOS)
@@ -27,6 +27,7 @@ set(CMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM "")
 setup_geode_mod(${PROJECT_NAME}
     EXTERNALS geode.node-ids:1.21.1
 )
+
 
 
 
