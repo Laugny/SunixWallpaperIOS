@@ -10,23 +10,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: true   # Submodule vendor/geode wirklich auschecken
+          submodules: recursive
 
       - name: Install Geode CLI
         run: brew install geode-sdk/geode/geode-cli
 
-      # GEODE_SDK korrekt (mit Expansion) für alle folgenden Steps setzen
       - name: Export GEODE_SDK
-        shell: bash
         run: echo "GEODE_SDK=${GITHUB_WORKSPACE}/vendor/geode" >> "$GITHUB_ENV"
 
-      # optional, aber hilfreich: CLI-internen Pfad auch setzen (kein Muss)
       - name: Tell Geode CLI about SDK (optional)
         run: geode sdk set-path "${GITHUB_WORKSPACE}/vendor/geode"
 
-      # prüfen, dass das Submodule wirklich da ist und die erwartete Datei existiert
       - name: Verify SDK layout
-        shell: bash
         run: |
           echo "GEODE_SDK=$GEODE_SDK"
           ls -la "$GEODE_SDK"
@@ -38,10 +33,6 @@ jobs:
       - name: Install iOS loader binaries
         run: geode sdk install-binaries --platform ios
 
-      - name: Export GEODE_SDK
-        run: echo "GEODE_SDK=${GITHUB_WORKSPACE}/vendor/geode" >> $GITHUB_ENV
-        
-  
       - name: Configure (Xcode for iOS)
         env:
           GEODE_SDK: ${{ env.GEODE_SDK }}
@@ -54,20 +45,22 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=12.0 \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo
 
-
-      - name: Build
+      - name: Build (only show errors/warnings)
         run: |
           set -o pipefail
-          # Build mit CMake/Xcode; leitet den Output an grep weiter
-          cmake --build build-ios --config RelWithDebInfo --parallel 2>&1 | tee build.log | grep -E "error:|warning:" || true
-          # Zeige Build-Log als Artefakt, falls du es später vollständig prüfen willst
-          cat build.log
-          # Alternativ für Xcode direkt:
-          # xcodebuild -project SunixWallpaperIOS.xcodeproj \
-          #   -configuration RelWithDebInfo \
-          #   -target SunixWallpaperIOS \
-          #   -quiet CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log | grep -E "error:|warning:" || true
+          # Build das PACKAGE-Target, sonst wird keine .geode erzeugt
+          cmake --build build-ios --config RelWithDebInfo --target SunixWallpaperIOS_PACKAGE --parallel 2>&1 \
+            | tee build-ios.log | grep -E "error:|warning:" || true
 
+      - name: Copy .geode to build/
+        run: |
+          mkdir -p build
+          geode_file=$(find build-ios -name '*.geode' -print -quit || true)
+          if [ -z "$geode_file" ]; then
+            echo "Keine .geode gefunden!"; ls -R build-ios; exit 1
+          fi
+          echo "Gefundene Geode-Datei: $geode_file"
+          cp "$geode_file" build/
 
       - name: Upload .geode
         uses: actions/upload-artifact@v4
